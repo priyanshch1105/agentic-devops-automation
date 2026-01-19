@@ -3,7 +3,7 @@ name: Terraform GitOps Pipeline
 on:
   pull_request:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   workflow_dispatch:
     inputs:
       environment:
@@ -22,7 +22,9 @@ jobs:
       env: ${{ steps.setenv.outputs.env }}
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Determine environment
         id: setenv
@@ -35,7 +37,9 @@ jobs:
             echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           fi
 
-      - uses: hashicorp/setup-terraform@v3
+      # hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@c6b8f7e1f7b5f63a8e0ad4fa2d7f4e1f7a9c6f94
         with:
           terraform_version: 1.7.0
 
@@ -80,9 +84,11 @@ jobs:
     environment: prod
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
-      - uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@c6b8f7e1f7b5f63a8e0ad4fa2d7f4e1f7a9c6f94
         with:
           terraform_version: 1.7.0
 
