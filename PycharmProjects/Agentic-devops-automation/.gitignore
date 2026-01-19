@@ -21,3 +21,5 @@ infra/runtime/plan.json
 # OS
 .DS_Store
 Thumbs.db
+
+infra/runtime/*

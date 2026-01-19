@@ -169,7 +169,48 @@ Returns:
 This is intentional.
 
 ---
+## 🔧 About `infra/runtime` (Important)
 
+`infra/runtime` is **not an environment**.
+
+It is a **temporary execution sandbox** managed entirely by the platform.
+
+### What this means
+
+* Users **never edit** `infra/runtime`
+* Users **never commit** `infra/runtime`
+* All Terraform plans and applies run **inside `runtime`**
+* Environment safety is enforced by **policies, approvals, and GitHub protections**, not folder names
+
+### Where users work
+
+Users define intent in:
+
+```
+infra/dev
+infra/staging
+infra/prod
+```
+
+The platform automatically:
+
+```
+infra/{environment} → infra/runtime → plan / policy / approval / apply
+```
+
+### Why this design
+
+* Prevents accidental production changes
+* Guarantees consistent execution
+* Enables policy enforcement and audit trails
+* Separates **intent** from **execution**
+
+> **Think of `runtime` as a secure execution engine — not a workspace.**
+
+⚠️ Do not edit or commit files inside `infra/runtime`.
+
+
+---
 ## 🛣️ Roadmap
 
 * Kubernetes runtime agent
