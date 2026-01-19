@@ -40,7 +40,7 @@ def run_workflow(req: RunRequest):
     }
 
     payload = {
-        "ref": "main",
+        "ref": "master",
         "inputs": {
             "environment": req.environment
         }
