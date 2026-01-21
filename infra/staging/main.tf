@@ -3,12 +3,12 @@ terraform {
 }
 
 provider "aws" {
-  region = var.region
+  region = local.region
 }
 
 module "network" {
   source     = "../modules/network"
-  cidr_block = var.vpc_cidr
-  env        = var.env
+  cidr_block = local.vpc_cidr
+  env        = local.env
 }
 
