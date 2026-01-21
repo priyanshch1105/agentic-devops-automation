@@ -1,8 +1,8 @@
 resource "aws_vpc" "this" {
-  cidr_block = var.cidr_block
+  cidr_block = local.cidr_block
 
   tags = {
-    Name        = "${var.env}-vpc"
-    Environment = var.env
+    Name        = "${local.env}-vpc"
+    Environment = local.env
   }
 }
