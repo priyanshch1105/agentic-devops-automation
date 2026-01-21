@@ -21,9 +21,9 @@ jobs:
         env: [ dev ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@f380d5720f25f84535520c89119950ec79bb1399
 
-      - uses: hashicorp/setup-terraform@7fb3960ac6e6da23658d647fdab424c209d11572
+      - uses: hashicorp/setup-terraform@f380d5720f25f84535520c89119950ec79bb1399
         with:
           terraform_version: 1.7.0
 
