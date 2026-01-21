@@ -3,85 +3,93 @@ name: Terraform GitOps Pipeline
 on:
   pull_request:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       environment:
-        description: "Target environment (prod only)"
+        description: "Target environment"
         required: true
         type: choice
         options:
           - prod
 
 jobs:
-  terraform:
+  plan:
     name: Terraform Plan + OPA
     runs-on: ubuntu-latest
 
-    steps:
-      # -----------------------------
-      # Checkout repository
-      # -----------------------------
-      - name: Checkout repository
-        uses: actions/checkout@<CHECKOUT_COMMIT_SHA>
+    outputs:
+      env: ${{ steps.setenv.outputs.env }}
 
-      # -----------------------------
-      # Setup Terraform
-      # -----------------------------
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@<SETUP_TERRAFORM_COMMIT_SHA>
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Determine environment
+        id: setenv
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "env=dev" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "env=staging" >> $GITHUB_OUTPUT
+          else
+            echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
         with:
           terraform_version: 1.7.0
 
-      # -----------------------------
-      # Ensure runtime directory
-      # -----------------------------
-      - name: Ensure runtime directory exists
-        run: mkdir -p infra/runtime
-
-      # -----------------------------
-      # Terraform formatting
-      # -----------------------------
       - name: Terraform fmt
-        working-directory: infra/runtime
-        run: terraform fmt -check || true
+        working-directory: infra/${{ steps.setenv.outputs.env }}
+        run: terraform fmt -check
 
-      # -----------------------------
-      # Terraform init
-      # -----------------------------
       - name: Terraform init
-        working-directory: infra/runtime
+        working-directory: infra/${{ steps.setenv.outputs.env }}
         run: terraform init -input=false
 
-      # -----------------------------
-      # Terraform plan
-      # -----------------------------
       - name: Terraform plan
-        working-directory: infra/runtime
+        working-directory: infra/${{ steps.setenv.outputs.env }}
         run: terraform plan -out=tfplan
 
-      # -----------------------------
-      # Convert plan to JSON
-      # -----------------------------
       - name: Convert plan to JSON
-        working-directory: infra/runtime
+        working-directory: infra/${{ steps.setenv.outputs.env }}
         run: terraform show -json tfplan > plan.json
 
-      # -----------------------------
-      # Install OPA
-      # -----------------------------
       - name: Install OPA
         run: |
           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
           chmod +x opa
           sudo mv opa /usr/local/bin/opa
 
-      # -----------------------------
-      # OPA policy check
-      # -----------------------------
       - name: OPA policy check
         run: |
           opa eval \
             --data policies \
-            --input infra/runtime/plan.json \
+            --input infra/${{ steps.setenv.outputs.env }}/plan.json \
             "data.terraform.policy.deny == []"
+
+  apply:
+    name: Terraform Apply (PROD only)
+    needs: plan
+    runs-on: ubuntu-latest
+
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      needs.plan.outputs.env == 'prod'
+
+    environment: prod
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_version: 1.7.0
+
+      - name: Terraform init
+        working-directory: infra/prod
+        run: terraform init -input=false
+
+      - name: Terraform apply
+        working-directory: infra/prod
+        run: terraform apply -input=false -auto-approve
