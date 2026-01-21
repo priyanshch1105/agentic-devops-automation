@@ -1,3 +1,5 @@
-region    = "ap-south-1"
-env       = "staging"
-vpc_cidr  = "10.1.0.0/16"
+locals {
+  region   = "ap-south-1"
+  env      = "staging"
+  vpc_cidr = "10.2.0.0/16"
+}
