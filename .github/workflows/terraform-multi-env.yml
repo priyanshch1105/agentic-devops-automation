@@ -3,7 +3,7 @@ name: Terraform Multi-Env Plan + Policy
 on:
   pull_request:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       environment:
@@ -16,12 +16,14 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@<CHECKOUT_COMMIT_SHA>
+    strategy:
+      matrix:
+        env: [ dev ]
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@<SETUP_TERRAFORM_COMMIT_SHA>
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
         with:
           terraform_version: 1.7.0
 
@@ -32,7 +34,7 @@ jobs:
             echo "env=dev" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" = "push" ]; then
             echo "env=staging" >> $GITHUB_OUTPUT
-          else
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           fi
 
