@@ -16,14 +16,14 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        env: [ dev ]
-
     steps:
-      - uses: actions/checkout@f380d5720f25f84535520c89119950ec79bb1399
+      # actions/checkout v4 (FULL SHA)
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
-      - uses: hashicorp/setup-terraform@f380d5720f25f84535520c89119950ec79bb1399
+      # hashicorp/setup-terraform v3 (FULL SHA)
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@f1a8c7d47e6f2f88e9b0f7d2d7e6c5a8f6b9b8f2
         with:
           terraform_version: 1.7.0
 
@@ -44,7 +44,7 @@ jobs:
 
       - name: Terraform init
         working-directory: infra/${{ steps.env.outputs.env }}
-        run: terraform init -input=True
+        run: terraform init -input=false
 
       - name: Terraform plan
         working-directory: infra/${{ steps.env.outputs.env }}
