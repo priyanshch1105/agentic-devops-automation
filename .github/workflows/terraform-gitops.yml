@@ -1,48 +1,84 @@
-name: Terraform Plan & Policy Check
+name: Terraform GitOps Pipeline
 
 on:
   pull_request:
   push:
     branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (prod only)"
+        required: true
+        type: choice
+        options:
+          - prod
 
 jobs:
   terraform:
+    name: Terraform Plan + OPA
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------------
+      # Checkout repository
+      # -----------------------------
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@<CHECKOUT_COMMIT_SHA>
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@3c1b3d39d0bba8f0d6a6cfa1f1b46a7e27c6d79f
+      # -----------------------------
+      # Setup Terraform
+      # -----------------------------
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@<SETUP_TERRAFORM_COMMIT_SHA>
         with:
           terraform_version: 1.7.0
 
+      # -----------------------------
+      # Ensure runtime directory
+      # -----------------------------
       - name: Ensure runtime directory exists
         run: mkdir -p infra/runtime
 
+      # -----------------------------
+      # Terraform formatting
+      # -----------------------------
       - name: Terraform fmt
         working-directory: infra/runtime
         run: terraform fmt -check || true
 
+      # -----------------------------
+      # Terraform init
+      # -----------------------------
       - name: Terraform init
         working-directory: infra/runtime
         run: terraform init -input=false
 
+      # -----------------------------
+      # Terraform plan
+      # -----------------------------
       - name: Terraform plan
         working-directory: infra/runtime
         run: terraform plan -out=tfplan
 
+      # -----------------------------
+      # Convert plan to JSON
+      # -----------------------------
       - name: Convert plan to JSON
         working-directory: infra/runtime
         run: terraform show -json tfplan > plan.json
 
+      # -----------------------------
+      # Install OPA
+      # -----------------------------
       - name: Install OPA
         run: |
           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
           chmod +x opa
           sudo mv opa /usr/local/bin/opa
 
+      # -----------------------------
+      # OPA policy check
+      # -----------------------------
       - name: OPA policy check
         run: |
           opa eval \
