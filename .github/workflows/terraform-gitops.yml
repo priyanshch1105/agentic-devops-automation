@@ -24,7 +24,7 @@ jobs:
     steps:
       # actions/checkout@v4
       - name: Checkout
-        uses: actions/checkout@f380d5720f25f84535520c89119950ec79bb1399
+        uses: actions/checkout@v3.1.2
 
       - name: Determine environment
         id: setenv
@@ -38,8 +38,8 @@ jobs:
           fi
 
       # hashicorp/setup-terraform@v3
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@f380d5720f25f84535520c89119950ec79bb1399
+      - name: HashiCorp - Setup Terraform
+        uses: hashicorp/setup-terraform@v3.1.2
         with:
           terraform_version: 1.7.0
 
@@ -85,10 +85,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@f380d5720f25f84535520c89119950ec79bb1399
+        uses: actions/checkout@v3.1.2
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@f380d5720f25f84535520c89119950ec79bb1399
+      - name: HashiCorp - Setup Terraform
+        uses: hashicorp/setup-terraform@v3.1.2
         with:
           terraform_version: 1.7.0
 
