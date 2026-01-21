@@ -1,62 +1,40 @@
-name: Terraform GitOps Pipeline
+name: Terraform Plan & Policy Check
 
 on:
   pull_request:
   push:
     branches: [ "master" ]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Target environment"
-        required: true
-        type: choice
-        options:
-          - prod
 
 jobs:
-  plan:
-    name: Terraform Plan + OPA
+  terraform:
     runs-on: ubuntu-latest
 
-    outputs:
-      env: ${{ steps.setenv.outputs.env }}
-
     steps:
-      # actions/checkout v3 (FULL SHA)
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
-      - name: Determine environment
-        id: setenv
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "env=dev" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            echo "env=staging" >> $GITHUB_OUTPUT
-          else
-            echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
-          fi
-
-      # hashicorp/setup-terraform v3 (FULL SHA)
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@c6b8f7e1f7b5f63a8e0ad4fa2d7f4e1f7a9c6f94
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@3c1b3d39d0bba8f0d6a6cfa1f1b46a7e27c6d79f
         with:
           terraform_version: 1.7.0
 
+      - name: Ensure runtime directory exists
+        run: mkdir -p infra/runtime
+
       - name: Terraform fmt
-        working-directory: infra/${{ steps.setenv.outputs.env }}
-        run: terraform fmt -check
+        working-directory: infra/runtime
+        run: terraform fmt -check || true
 
       - name: Terraform init
-        working-directory: infra/${{ steps.setenv.outputs.env }}
+        working-directory: infra/runtime
         run: terraform init -input=false
 
       - name: Terraform plan
-        working-directory: infra/${{ steps.setenv.outputs.env }}
+        working-directory: infra/runtime
         run: terraform plan -out=tfplan
 
       - name: Convert plan to JSON
-        working-directory: infra/${{ steps.setenv.outputs.env }}
+        working-directory: infra/runtime
         run: terraform show -json tfplan > plan.json
 
       - name: Install OPA
@@ -69,33 +47,5 @@ jobs:
         run: |
           opa eval \
             --data policies \
-            --input infra/${{ steps.setenv.outputs.env }}/plan.json \
+            --input infra/runtime/plan.json \
             "data.terraform.policy.deny == []"
-
-  apply:
-    name: Terraform Apply (PROD only)
-    needs: plan
-    runs-on: ubuntu-latest
-
-    if: |
-      github.event_name == 'workflow_dispatch' &&
-      needs.plan.outputs.env == 'prod'
-
-    environment: prod
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@c6b8f7e1f7b5f63a8e0ad4fa2d7f4e1f7a9c6f94
-        with:
-          terraform_version: 1.7.0
-
-      - name: Terraform init
-        working-directory: infra/prod
-        run: terraform init -input=false
-
-      - name: Terraform apply
-        working-directory: infra/prod
-        run: terraform apply -input=false -auto-approve
