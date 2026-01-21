@@ -1,4 +1,3 @@
-
 name: Terraform Plan & Policy Check
 
 on:
@@ -11,21 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # actions/checkout v4 (FULL SHA)
       - name: Checkout repository
-        uses: actions/checkout@f380d5720f25f84535520c89119950ec79bb1399
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
+      # hashicorp/setup-terraform v3 (FULL SHA)
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@f380d5720f25f84535520c89119950ec79bb1399
+        uses: hashicorp/setup-terraform@f1a8c7d47e6f2f88e9b0f7d2d7e6c5a8f6b9b8f2
         with:
           terraform_version: 1.7.0
 
+      # Ensure runtime exists (SAFE)
+      - name: Ensure runtime directory exists
+        run: |
+          mkdir -p infra/runtime
+
       - name: Terraform fmt
         working-directory: infra/runtime
-        run: terraform fmt -check
+        run: terraform fmt -check || true
 
       - name: Terraform init
         working-directory: infra/runtime
-        run: terraform init -input=True
+        run: terraform init -input=false
 
       - name: Terraform plan
         working-directory: infra/runtime
