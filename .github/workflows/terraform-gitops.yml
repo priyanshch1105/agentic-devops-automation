@@ -24,7 +24,7 @@ jobs:
     steps:
       # actions/checkout@v4
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@v4
 
       - name: Determine environment
         id: setenv
@@ -39,7 +39,7 @@ jobs:
 
       # hashicorp/setup-terraform@v3
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@7fb3960ac6e6da23658d647fdab424c209d11572
         with:
           terraform_version: 1.7.0
 
@@ -49,7 +49,7 @@ jobs:
 
       - name: Terraform init
         working-directory: infra/${{ steps.setenv.outputs.env }}
-        run: terraform init -input=false
+        run: terraform init -input=True
 
       - name: Terraform plan
         working-directory: infra/${{ steps.setenv.outputs.env }}
@@ -85,16 +85,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@7fb3960ac6e6da23658d647fdab424c209d11572
         with:
           terraform_version: 1.7.0
 
       - name: Terraform init
         working-directory: infra/prod
-        run: terraform init -input=false
+        run: terraform init -input=True
 
       - name: Terraform apply
         working-directory: infra/prod
