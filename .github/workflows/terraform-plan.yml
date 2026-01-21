@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@7fb3960ac6e6da23658d647fdab424c209d11572
 
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@7fb3960ac6e6da23658d647fdab424c209d11572
         with:
           terraform_version: 1.7.0
 
@@ -25,7 +25,7 @@ jobs:
 
       - name: Terraform init
         working-directory: infra/runtime
-        run: terraform init -input=false
+        run: terraform init -input=True
 
       - name: Terraform plan
         working-directory: infra/runtime
