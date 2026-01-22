@@ -17,7 +17,10 @@ jobs:
   plan:
     name: Terraform Plan + OPA
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write
+      contents: read
+      
     outputs:
       env: ${{ steps.setenv.outputs.env }}
 
