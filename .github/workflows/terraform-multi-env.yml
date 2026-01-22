@@ -3,7 +3,7 @@ name: Terraform Multi-Env Plan + Policy
 on:
   pull_request:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   workflow_dispatch:
     inputs:
       environment:
@@ -46,6 +46,13 @@ jobs:
         working-directory: infra/${{ steps.env.outputs.env }}
         run: terraform init -input=false
 
+# 2️⃣ 🔑 AWS OIDC – YAHAN ADD KARNA HAI
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+          
       - name: Terraform plan
         working-directory: infra/${{ steps.env.outputs.env }}
         run: terraform plan -out=tfplan
